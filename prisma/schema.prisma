@@ -1,0 +1,187 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // URL is configured in prisma.config.ts
+}
+
+// --- ENUMS (Business Logic States) ---
+
+enum ContractStatus {
+  DRAFT
+  SENT
+  VIEWED
+  SIGNED
+  VOID
+}
+
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  VOID
+  UNCOLLECTIBLE
+}
+
+enum EntityType {
+  CONTRACT
+  INVOICE
+}
+
+// --- IDENTITY & AUTHENTICATION ---
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String?   // Hashed password (null for OAuth-only users)
+  emailVerified DateTime?
+  image         String?   // Avatar from OAuth provider
+  
+  // Relations
+  accounts      Account[] // OAuth linked accounts (Google, GitHub)
+  sessions      Session[] // Active login sessions / Refresh tokens
+  profile       Profile?  // The business/freelancer profile
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                 String  @id @default(uuid())
+  userId             String
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type               String  // "oauth" or "local"
+  provider           String  // e.g., "google"
+  providerAccountId  String  // Provider's unique user ID
+  
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique // Used for refresh token rotation
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires      DateTime
+  userAgent    String?
+  ipAddress    String?
+  createdAt    DateTime @default(now())
+}
+
+// --- BUSINESS & FREELANCE OPERATIONS ---
+
+model Profile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  businessName    String?
+  stripeAccountId String?  // For Connect payouts
+  branding        Json?    // { logoUrl: string, primaryColor: string, font: string }
+  
+  clients         Client[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Client {
+  id              String     @id @default(uuid())
+  profileId       String
+  profile         Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  name            String
+  email           String
+  companyAddress  String?
+  taxId           String?    // VAT, EIN, etc.
+  
+  contracts       Contract[]
+  invoices        Invoice[]
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+model Contract {
+  id           String         @id @default(uuid())
+  clientId     String
+  client       Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  title        String
+  content      String         @db.Text // Markdown source or JSON blocks
+  status       ContractStatus @default(DRAFT)
+  version      Int            @default(1)
+  shortLink    String         @unique // Unique slug for public portal access
+  
+  signatures   Signature[]
+  invoices     Invoice[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Signature {
+  id          String   @id @default(uuid())
+  contractId  String
+  contract    Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  
+  signerName  String
+  signerEmail String
+  ipAddress   String
+  userAgent   String?
+  signedAt    DateTime @default(now())
+}
+
+model Invoice {
+  id                    String        @id @default(uuid())
+  invoiceNumber         String        @unique // e.g., INV-2026-001
+  clientId              String
+  client                Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  contractId            String?
+  contract              Contract?     @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  
+  status                InvoiceStatus @default(DRAFT)
+  dueDate               DateTime
+  currency              String        @default("USD")
+  taxRate               Decimal       @default(0) @db.Decimal(5, 2)
+  subtotal              Decimal       @default(0) @db.Decimal(10, 2)
+  taxAmount             Decimal       @default(0) @db.Decimal(10, 2)
+  total                 Decimal       @default(0) @db.Decimal(10, 2)
+  
+  items                 InvoiceItem[]
+  stripePaymentIntentId String?
+  
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+}
+
+model InvoiceItem {
+  id          String  @id @default(uuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  
+  description String
+  quantity    Decimal @db.Decimal(10, 2)
+  unitPrice   Decimal @db.Decimal(10, 2)
+  total       Decimal @db.Decimal(10, 2) // Stored to prevent rounding issues
+}
+
+model ActivityLog {
+  id         String     @id @default(uuid())
+  entityType EntityType
+  entityId   String     // ID of the Contract or Invoice
+  event      String     // e.g., "VIEWED", "SIGNED", "PAID"
+  metadata   Json?      // Browser info, Geolocation, etc.
+  createdAt  DateTime   @default(now())
+}
