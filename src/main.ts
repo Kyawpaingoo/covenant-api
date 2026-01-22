@@ -20,7 +20,15 @@ async function bootstrap() {
   );
   const origins = originString.split(',').map((origin) => origin.trim());
 
-  // 2. Security Middleware (Helmet)
+  // 2. Enable CORS
+  app.enableCors({
+    origin: origins,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'stripe-signature'],
+  });
+
+  // 3. Security Middleware (Helmet)
   // Adjusted to allow Swagger UI and cross-origin requests
   app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
@@ -34,13 +42,7 @@ async function bootstrap() {
     },
   }));
 
-  // 3. Enable CORS
-  app.enableCors({
-    origin: origins,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'stripe-signature'],
-  });
+  
 
   // 4. Global validation pipe
   app.useGlobalPipes(
