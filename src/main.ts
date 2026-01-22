@@ -13,19 +13,36 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
 
-  // Security middleware
-  app.use(helmet());
+  // 1. Define CORS Origins first (so they can be used by Helmet and CORS)
+  const originString = configService.get<string>(
+    'CORS_ORIGINS', 
+    'http://localhost:5173,http://localhost:3001'
+  );
+  const origins = originString.split(',').map((origin) => origin.trim());
 
-  // CORS configuration
-  const corsOrigins = configService.get<string>('CORS_ORIGINS', 'http://localhost:5173,http://localhost:3001,https://covenant-flow-z5s2oxtin-kyawpaingoos-projects.vercel.app');
+  // 2. Security Middleware (Helmet)
+  // Adjusted to allow Swagger UI and cross-origin requests
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: [`'self'`],
+        scriptSrc: [`'self'`, `'unsafe-inline'`, `https://cdn.jsdelivr.net`],
+        imgSrc: [`'self'`, `data:`, `https://validator.swagger.io`],
+        connectSrc: [`'self'`, ...origins], 
+      },
+    },
+  }));
+
+  // 3. Enable CORS
   app.enableCors({
-    origin: corsOrigins.split(',').map((origin) => origin.trim()),
+    origin: origins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'stripe-signature'],
   });
 
-  // Global validation pipe
+  // 4. Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -37,22 +54,18 @@ async function bootstrap() {
     }),
   );
 
-  // Global exception filter
+  // 5. Global exception filter
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // Swagger documentation
+  // 6. Swagger documentation
   const config = new DocumentBuilder()
     .setTitle('Code & Covenant API')
     .setDescription('REST API for the Code & Covenant freelance platform')
     .setVersion('1.0')
     .addBearerAuth()
-    .addTag('auth', 'Authentication endpoints')
-    .addTag('profile', 'User profile management')
-    .addTag('clients', 'Client management')
-    .addTag('contracts', 'Contract engine')
-    .addTag('invoices', 'Invoice management')
-    .addTag('activity-logs', 'Activity tracking')
-    .addTag('stripe', 'Payment integration')
+    .addTag('auth')
+    .addTag('profile')
+    // ... add other tags as needed
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -62,11 +75,11 @@ async function bootstrap() {
     },
   });
 
-  // Start server
+  // 7. Start server
   const port = configService.get<number>('PORT', 3000);
   await app.listen(port);
 
-  console.log(`\n🚀 Code & Covenant API is running on http://localhost:${port}`);
+  console.log(`\n🚀 API is running on port: ${port}`);
   console.log(`📚 Swagger documentation: http://localhost:${port}/api/docs\n`);
 }
 
