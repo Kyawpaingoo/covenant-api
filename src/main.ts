@@ -78,8 +78,8 @@ async function bootstrap() {
   });
 
   // 7. Start server
-  const port = configService.get<number>('PORT', 3000);
-  await app.listen(port);
+  const port = process.env.PORT || configService.get<number>('PORT', 8080);
+await app.listen(port, '0.0.0.0');
 
   console.log(`\n🚀 API is running on port: ${port}`);
   console.log(`📚 Swagger documentation: http://localhost:${port}/api/docs\n`);
