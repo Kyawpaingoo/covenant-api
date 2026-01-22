@@ -8,8 +8,10 @@ import { HttpExceptionFilter } from './common/filters';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn', 'log', 'debug', 'verbose'],
     rawBody: true, // Required for Stripe webhooks
-  });
+  },
+);
 
   const configService = app.get(ConfigService);
 
