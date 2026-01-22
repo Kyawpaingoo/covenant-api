@@ -17,7 +17,7 @@ async function bootstrap() {
   app.use(helmet());
 
   // CORS configuration
-  const corsOrigins = configService.get<string>('CORS_ORIGINS', 'http://localhost:5173');
+  const corsOrigins = configService.get<string>('CORS_ORIGINS', 'http://localhost:5173,http://localhost:3001,https://covenant-flow-z5s2oxtin-kyawpaingoos-projects.vercel.app');
   app.enableCors({
     origin: corsOrigins.split(',').map((origin) => origin.trim()),
     credentials: true,
