@@ -18,7 +18,7 @@ async function bootstrap() {
   // 1. Define CORS Origins first (so they can be used by Helmet and CORS)
   const originString = configService.get<string>(
     'CORS_ORIGINS', 
-    'http://localhost:5173,http://localhost:3001'
+    'http://localhost:5173,http://localhost:3001, http://localhost:8081'
   );
   const origins = originString.split(',').map((origin) => origin.trim());
 

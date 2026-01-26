@@ -13,7 +13,7 @@ async function bootstrap() {
         rawBody: true,
     });
     const configService = app.get(config_1.ConfigService);
-    const originString = configService.get('CORS_ORIGINS', 'http://localhost:5173,http://localhost:3001');
+    const originString = configService.get('CORS_ORIGINS', 'http://localhost:5173,http://localhost:3001, http://localhost:8081');
     const origins = originString.split(',').map((origin) => origin.trim());
     app.enableCors({
         origin: origins,
