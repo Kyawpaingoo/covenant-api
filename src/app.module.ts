@@ -15,6 +15,7 @@ import { ContractsModule } from './modules/contracts';
 import { InvoicesModule } from './modules/invoices';
 import { ActivityModule } from './modules/activity';
 import { StripeModule } from './modules/stripe';
+import { EmailModule } from './modules/email';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { StripeModule } from './modules/stripe';
     InvoicesModule,
     ActivityModule,
     StripeModule,
+    EmailModule,
   ],
   providers: [
     // Apply rate limiting globally

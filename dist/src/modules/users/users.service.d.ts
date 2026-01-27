@@ -15,6 +15,7 @@ export declare class UsersService {
             updatedAt: Date;
             businessName: string | null;
             stripeAccountId: string | null;
+            signatureUrl: string | null;
             branding: import("@prisma/client/runtime/client").JsonValue | null;
             userId: string;
         } | null;
@@ -31,6 +32,7 @@ export declare class UsersService {
             updatedAt: Date;
             businessName: string | null;
             stripeAccountId: string | null;
+            signatureUrl: string | null;
             branding: import("@prisma/client/runtime/client").JsonValue | null;
             userId: string;
         } | null;

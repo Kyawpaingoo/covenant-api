@@ -20,6 +20,7 @@ const contracts_1 = require("./modules/contracts");
 const invoices_1 = require("./modules/invoices");
 const activity_1 = require("./modules/activity");
 const stripe_1 = require("./modules/stripe");
+const email_1 = require("./modules/email");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -56,6 +57,7 @@ exports.AppModule = AppModule = __decorate([
             invoices_1.InvoicesModule,
             activity_1.ActivityModule,
             stripe_1.StripeModule,
+            email_1.EmailModule,
         ],
         providers: [
             {

@@ -28,6 +28,7 @@ export declare class AuthAccountService {
             updatedAt: Date;
             businessName: string | null;
             stripeAccountId: string | null;
+            signatureUrl: string | null;
             branding: import("@prisma/client/runtime/client").JsonValue | null;
             userId: string;
         } | null;

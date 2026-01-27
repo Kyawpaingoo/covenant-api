@@ -1,4 +1,4 @@
-import { IsString, IsEmail } from 'class-validator';
+import { IsString, IsEmail, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class SignContractDto {
@@ -9,4 +9,9 @@ export class SignContractDto {
   @ApiProperty({ example: 'john@example.com' })
   @IsEmail()
   signerEmail: string;
+
+  @ApiProperty({ example: 'data:image/png;base64,...', required: false })
+  @IsString()
+  @IsOptional()
+  signatureData?: string;
 }

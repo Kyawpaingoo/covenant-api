@@ -15,13 +15,43 @@ const prisma_1 = require("../../prisma");
 const activity_service_1 = require("../activity/activity.service");
 const client_1 = require("@prisma/client");
 const uuid_1 = require("uuid");
+const s3_service_1 = require("../../aws/s3.service");
+const pdf_service_1 = require("../../pdf/pdf.service");
+const marked_1 = require("marked");
 let ContractsService = class ContractsService {
-    constructor(prisma, activityService) {
+    constructor(prisma, activityService, s3Service, pdfService) {
         this.prisma = prisma;
         this.activityService = activityService;
+        this.s3Service = s3Service;
+        this.pdfService = pdfService;
     }
     generateShortLink() {
         return (0, uuid_1.v4)().split('-')[0] + (0, uuid_1.v4)().split('-')[1];
+    }
+    parseContractContent(content) {
+        try {
+            if (content.trim().startsWith('[')) {
+                const blocks = JSON.parse(content);
+                return blocks
+                    .map((block) => {
+                    switch (block.type) {
+                        case 'heading':
+                            return `${'#'.repeat(block.level || 1)} ${block.text}\n\n`;
+                        case 'paragraph':
+                            return `${block.text}\n\n`;
+                        case 'list':
+                            return block.items.map((item) => `- ${item}\n`).join('') + '\n';
+                        default:
+                            return '';
+                    }
+                })
+                    .join('');
+            }
+            return content;
+        }
+        catch {
+            return content;
+        }
     }
     async getProfileId(userId) {
         const user = await this.prisma.user.findUnique({
@@ -206,7 +236,14 @@ let ContractsService = class ContractsService {
     async signContract(slug, signDto, ipAddress, userAgent) {
         const contract = await this.prisma.contract.findUnique({
             where: { shortLink: slug },
-            include: { signatures: true },
+            include: {
+                signatures: true,
+                client: {
+                    include: {
+                        profile: true
+                    }
+                }
+            },
         });
         if (!contract) {
             throw new common_1.NotFoundException('Contract not found');
@@ -217,21 +254,38 @@ let ContractsService = class ContractsService {
         if (contract.status === client_1.ContractStatus.SIGNED) {
             throw new common_1.BadRequestException('This contract has already been signed');
         }
-        const [signature] = await this.prisma.$transaction([
-            this.prisma.signature.create({
-                data: {
-                    contractId: contract.id,
-                    signerName: signDto.signerName,
-                    signerEmail: signDto.signerEmail,
-                    ipAddress,
-                    userAgent,
-                },
-            }),
-            this.prisma.contract.update({
-                where: { id: contract.id },
-                data: { status: client_1.ContractStatus.SIGNED },
-            }),
-        ]);
+        const signatureData = await this.prisma.signature.create({
+            data: {
+                contractId: contract.id,
+                signerName: signDto.signerName,
+                signerEmail: signDto.signerEmail,
+                signatureData: signDto.signatureData,
+                ipAddress,
+                userAgent,
+            },
+        });
+        let pdfUrl = null;
+        try {
+            const markdownContent = this.parseContractContent(contract.content);
+            const htmlContent = marked_1.marked.parse(markdownContent);
+            const fullHtml = this.pdfService.generateContractHtml(contract.title, htmlContent, {
+                client: signDto.signatureData,
+                provider: contract.client.profile.signatureUrl || undefined
+            });
+            const pdfBuffer = await this.pdfService.generatePdf(fullHtml);
+            const fileName = `contract-${contract.shortLink}-signed.pdf`;
+            pdfUrl = await this.s3Service.uploadFile(pdfBuffer, fileName, 'application/pdf');
+        }
+        catch (error) {
+            console.error('Failed to generate/upload PDF', error);
+        }
+        await this.prisma.contract.update({
+            where: { id: contract.id },
+            data: {
+                status: client_1.ContractStatus.SIGNED,
+                pdfUrl: pdfUrl
+            },
+        });
         await this.activityService.log({
             entityType: client_1.EntityType.CONTRACT,
             entityId: contract.id,
@@ -242,22 +296,51 @@ let ContractsService = class ContractsService {
                 ipAddress,
                 userAgent,
                 signedAt: new Date().toISOString(),
+                pdfGenerated: !!pdfUrl,
             },
         });
         return {
             message: 'Contract signed successfully',
             signature: {
-                id: signature.id,
-                signerName: signature.signerName,
-                signedAt: signature.signedAt,
+                id: signatureData.id,
+                signerName: signatureData.signerName,
+                signedAt: signatureData.signedAt,
+                pdfUrl,
             },
         };
+    }
+    async downloadContractPdf(slug) {
+        const contract = await this.prisma.contract.findUnique({
+            where: { shortLink: slug },
+            include: {
+                client: {
+                    include: {
+                        profile: true
+                    }
+                },
+            },
+        });
+        if (!contract) {
+            throw new common_1.NotFoundException('Contract not found');
+        }
+        if (contract.status === client_1.ContractStatus.SIGNED && contract.pdfUrl) {
+            return contract.pdfUrl;
+        }
+        const markdownContent = this.parseContractContent(contract.content);
+        const htmlContent = marked_1.marked.parse(markdownContent);
+        const fullHtml = this.pdfService.generateContractHtml(contract.title, htmlContent, {
+            client: undefined,
+            provider: contract.client.profile.signatureUrl || undefined
+        });
+        return this.pdfService.generatePdf(fullHtml);
     }
 };
 exports.ContractsService = ContractsService;
 exports.ContractsService = ContractsService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_1.PrismaService,
-        activity_service_1.ActivityService])
+        activity_service_1.ActivityService,
+        s3_service_1.S3Service,
+        pdf_service_1.PdfService])
 ], ContractsService);
 //# sourceMappingURL=contracts.service.js.map

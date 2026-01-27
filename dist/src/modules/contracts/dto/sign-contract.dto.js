@@ -25,4 +25,10 @@ __decorate([
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], SignContractDto.prototype, "signerEmail", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 'data:image/png;base64,...', required: false }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], SignContractDto.prototype, "signatureData", void 0);
 //# sourceMappingURL=sign-contract.dto.js.map

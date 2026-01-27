@@ -1,11 +1,16 @@
 import { PrismaService } from '../../prisma';
 import { ActivityService } from '../activity/activity.service';
 import { CreateContractDto, UpdateContractDto, SignContractDto } from './dto';
+import { S3Service } from '../../aws/s3.service';
+import { PdfService } from '../../pdf/pdf.service';
 export declare class ContractsService {
     private readonly prisma;
     private readonly activityService;
-    constructor(prisma: PrismaService, activityService: ActivityService);
+    private readonly s3Service;
+    private readonly pdfService;
+    constructor(prisma: PrismaService, activityService: ActivityService, s3Service: S3Service, pdfService: PdfService);
     private generateShortLink;
+    private parseContractContent;
     private getProfileId;
     create(userId: string, createContractDto: CreateContractDto): Promise<{
         client: {
@@ -21,6 +26,7 @@ export declare class ContractsService {
         status: import(".prisma/client").$Enums.ContractStatus;
         version: number;
         shortLink: string;
+        pdfUrl: string | null;
         clientId: string;
     }>;
     findAll(userId: string): Promise<({
@@ -41,6 +47,7 @@ export declare class ContractsService {
         status: import(".prisma/client").$Enums.ContractStatus;
         version: number;
         shortLink: string;
+        pdfUrl: string | null;
         clientId: string;
     })[]>;
     findOne(userId: string, id: string): Promise<{
@@ -64,6 +71,7 @@ export declare class ContractsService {
             id: string;
             signerName: string;
             signerEmail: string;
+            signatureData: string | null;
             ipAddress: string;
             userAgent: string | null;
             signedAt: Date;
@@ -78,6 +86,7 @@ export declare class ContractsService {
         status: import(".prisma/client").$Enums.ContractStatus;
         version: number;
         shortLink: string;
+        pdfUrl: string | null;
         clientId: string;
     }>;
     update(userId: string, id: string, updateContractDto: UpdateContractDto): Promise<{
@@ -94,6 +103,7 @@ export declare class ContractsService {
         status: import(".prisma/client").$Enums.ContractStatus;
         version: number;
         shortLink: string;
+        pdfUrl: string | null;
         clientId: string;
     }>;
     remove(userId: string, id: string): Promise<{
@@ -119,6 +129,7 @@ export declare class ContractsService {
             id: string;
             signerName: string;
             signerEmail: string;
+            signatureData: string | null;
             ipAddress: string;
             userAgent: string | null;
             signedAt: Date;
@@ -133,6 +144,7 @@ export declare class ContractsService {
         status: import(".prisma/client").$Enums.ContractStatus;
         version: number;
         shortLink: string;
+        pdfUrl: string | null;
         clientId: string;
     }>;
     signContract(slug: string, signDto: SignContractDto, ipAddress: string, userAgent?: string): Promise<{
@@ -141,6 +153,8 @@ export declare class ContractsService {
             id: string;
             signerName: string;
             signedAt: Date;
+            pdfUrl: string | null;
         };
     }>;
+    downloadContractPdf(slug: string): Promise<string | Buffer>;
 }
