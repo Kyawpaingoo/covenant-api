@@ -11,12 +11,13 @@ const common_1 = require("@nestjs/common");
 const contracts_controller_1 = require("./contracts.controller");
 const contracts_service_1 = require("./contracts.service");
 const activity_module_1 = require("../activity/activity.module");
+const shared_module_1 = require("../../shared/shared.module");
 let ContractsModule = class ContractsModule {
 };
 exports.ContractsModule = ContractsModule;
 exports.ContractsModule = ContractsModule = __decorate([
     (0, common_1.Module)({
-        imports: [(0, common_1.forwardRef)(() => activity_module_1.ActivityModule)],
+        imports: [(0, common_1.forwardRef)(() => activity_module_1.ActivityModule), shared_module_1.SharedModule],
         controllers: [contracts_controller_1.ContractsController],
         providers: [contracts_service_1.ContractsService],
         exports: [contracts_service_1.ContractsService],

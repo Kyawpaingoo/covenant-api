@@ -26,6 +26,7 @@ export declare class AuthService {
                 updatedAt: Date;
                 businessName: string | null;
                 stripeAccountId: string | null;
+                signatureUrl: string | null;
                 branding: import("@prisma/client/runtime/client").JsonValue | null;
                 userId: string;
             } | null;
@@ -45,6 +46,7 @@ export declare class AuthService {
                 updatedAt: Date;
                 businessName: string | null;
                 stripeAccountId: string | null;
+                signatureUrl: string | null;
                 branding: import("@prisma/client/runtime/client").JsonValue | null;
                 userId: string;
             } | null;
@@ -64,6 +66,7 @@ export declare class AuthService {
                 updatedAt: Date;
                 businessName: string | null;
                 stripeAccountId: string | null;
+                signatureUrl: string | null;
                 branding: import("@prisma/client/runtime/client").JsonValue | null;
                 userId: string;
             } | null;
@@ -89,6 +92,7 @@ export declare class AuthService {
             updatedAt: Date;
             businessName: string | null;
             stripeAccountId: string | null;
+            signatureUrl: string | null;
             branding: import("@prisma/client/runtime/client").JsonValue | null;
             userId: string;
         } | null;

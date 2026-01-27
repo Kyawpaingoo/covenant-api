@@ -47,6 +47,19 @@ let ContractsController = class ContractsController {
             'unknown';
         return this.contractsService.signContract(slug, signContractDto, ipAddress);
     }
+    async downloadContract(slug, res) {
+        const result = await this.contractsService.downloadContractPdf(slug);
+        if (typeof result === 'string') {
+            return res.redirect(result);
+        }
+        else {
+            res.set({
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': `attachment; filename="contract-${slug}.pdf"`,
+            });
+            return res.send(result);
+        }
+    }
 };
 exports.ContractsController = ContractsController;
 __decorate([
@@ -136,6 +149,15 @@ __decorate([
     __metadata("design:paramtypes", [String, dto_1.SignContractDto, Object]),
     __metadata("design:returntype", void 0)
 ], ContractsController.prototype, "signContract", null);
+__decorate([
+    (0, common_1.Get)('portal/contract/:slug/download'),
+    (0, swagger_1.ApiOperation)({ summary: 'Download contract PDF (Public)' }),
+    __param(0, (0, common_1.Param)('slug')),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], ContractsController.prototype, "downloadContract", null);
 exports.ContractsController = ContractsController = __decorate([
     (0, swagger_1.ApiTags)('contracts'),
     (0, common_1.Controller)(),

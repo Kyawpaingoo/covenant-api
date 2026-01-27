@@ -90,6 +90,7 @@ model Profile {
   
   businessName    String?
   stripeAccountId String?  // For Connect payouts
+  signatureUrl    String?  // Provider's stored signature
   branding        Json?    // { logoUrl: string, primaryColor: string, font: string }
   
   clients         Client[]
@@ -123,6 +124,7 @@ model Contract {
   status       ContractStatus @default(DRAFT)
   version      Int            @default(1)
   shortLink    String         @unique // Unique slug for public portal access
+  pdfUrl       String?        // URL to signed PDF file in S3
   
   signatures   Signature[]
   invoices     Invoice[]
@@ -137,6 +139,7 @@ model Signature {
   
   signerName  String
   signerEmail String
+  signatureData String? @db.Text // Base64 signature image
   ipAddress   String
   userAgent   String?
   signedAt    DateTime @default(now())

@@ -8,6 +8,7 @@ import {
   Param,
   UseGuards,
   Req,
+  Res,
   Ip,
 } from '@nestjs/common';
 import {
@@ -16,7 +17,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { ContractsService } from './contracts.service';
 import { CreateContractDto, UpdateContractDto, SignContractDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards';
@@ -112,5 +113,24 @@ export class ContractsController {
       req.socket.remoteAddress ||
       'unknown';
     return this.contractsService.signContract(slug, signContractDto, ipAddress);
+  }
+
+  @Get('portal/contract/:slug/download')
+  @ApiOperation({ summary: 'Download contract PDF (Public)' })
+  async downloadContract(
+    @Param('slug') slug: string,
+    @Res() res: Response,
+  ) {
+    const result = await this.contractsService.downloadContractPdf(slug);
+
+    if (typeof result === 'string') {
+      return res.redirect(result);
+    } else {
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="contract-${slug}.pdf"`,
+      });
+      return res.send(result);
+    }
   }
 }

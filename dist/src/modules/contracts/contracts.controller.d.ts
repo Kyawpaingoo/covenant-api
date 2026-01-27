@@ -1,4 +1,4 @@
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { ContractsService } from './contracts.service';
 import { CreateContractDto, UpdateContractDto, SignContractDto } from './dto';
 interface UserPayload {
@@ -22,6 +22,7 @@ export declare class ContractsController {
         status: import(".prisma/client").$Enums.ContractStatus;
         version: number;
         shortLink: string;
+        pdfUrl: string | null;
         clientId: string;
     }>;
     findAll(user: UserPayload): Promise<({
@@ -42,6 +43,7 @@ export declare class ContractsController {
         status: import(".prisma/client").$Enums.ContractStatus;
         version: number;
         shortLink: string;
+        pdfUrl: string | null;
         clientId: string;
     })[]>;
     findOne(user: UserPayload, id: string): Promise<{
@@ -65,6 +67,7 @@ export declare class ContractsController {
             id: string;
             signerName: string;
             signerEmail: string;
+            signatureData: string | null;
             ipAddress: string;
             userAgent: string | null;
             signedAt: Date;
@@ -79,6 +82,7 @@ export declare class ContractsController {
         status: import(".prisma/client").$Enums.ContractStatus;
         version: number;
         shortLink: string;
+        pdfUrl: string | null;
         clientId: string;
     }>;
     update(user: UserPayload, id: string, updateContractDto: UpdateContractDto): Promise<{
@@ -95,6 +99,7 @@ export declare class ContractsController {
         status: import(".prisma/client").$Enums.ContractStatus;
         version: number;
         shortLink: string;
+        pdfUrl: string | null;
         clientId: string;
     }>;
     remove(user: UserPayload, id: string): Promise<{
@@ -120,6 +125,7 @@ export declare class ContractsController {
             id: string;
             signerName: string;
             signerEmail: string;
+            signatureData: string | null;
             ipAddress: string;
             userAgent: string | null;
             signedAt: Date;
@@ -134,6 +140,7 @@ export declare class ContractsController {
         status: import(".prisma/client").$Enums.ContractStatus;
         version: number;
         shortLink: string;
+        pdfUrl: string | null;
         clientId: string;
     }>;
     signContract(slug: string, signContractDto: SignContractDto, req: Request): Promise<{
@@ -142,7 +149,9 @@ export declare class ContractsController {
             id: string;
             signerName: string;
             signedAt: Date;
+            pdfUrl: string | null;
         };
     }>;
+    downloadContract(slug: string, res: Response): Promise<void | Response<any, Record<string, any>>>;
 }
 export {};
