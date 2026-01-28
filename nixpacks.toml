@@ -1,0 +1,8 @@
+# nixpacks.toml
+[phases.setup]
+# This archive hash forces a newer version of the package list
+nixpkgsArchive = "51ad838b03a05b1de6f9f2a0fffecee64a9788ee"
+
+[variables]
+# This ensures it installs the latest v22 available in that archive
+NIXPACKS_NODE_VERSION = "22"
